@@ -2,30 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Fashion Studio</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
     <div class="app">
-        <!-- Header -->
         <header class="header">
             <span class="logo">🎨</span>
             <h1>Fashion Studio</h1>
         </header>
 
-        <!-- Main Toolbar -->
         <div class="toolbar">
-            <!-- First Row: Color Toggle + Tool Buttons with Text -->
+            <!-- First Row: Drawing Tools -->
             <div class="tool-row">
                 <button class="action-btn" onclick="toggleColorsPanel()">🎨 Colors</button>
                 <button class="action-btn" onclick="setEraser()">🧽 Eraser</button>
                 <button class="action-btn" onclick="undoLast()">↩️ Undo</button>
+                <button class="action-btn" onclick="redoLast()">↪️ Redo</button>
                 <button class="action-btn" onclick="clearCanvas()">🗑️ Clear All</button>
                 <button class="action-btn" onclick="clearAI()">🖼️ Clear AI</button>
             </div>
 
-            <!-- Second Row: Other Actions -->
+            <!-- Second Row: Shape and Text Tools -->
+            <div class="tool-row">
+                <button class="action-btn" onclick="setShapeMode('freehand')">✏️ Draw</button>
+                <button class="action-btn" onclick="setShapeMode('line')">📏 Line</button>
+                <button class="action-btn" onclick="setShapeMode('rectangle')">⬜ Rectangle</button>
+                <button class="action-btn" onclick="setShapeMode('circle')">⭕ Circle</button>
+                <button class="action-btn" onclick="toggleShapeSelectMode()">🔷 Select Shape</button>
+                <button class="action-btn" onclick="addText()">🔤 Add Text</button>
+                <button class="action-btn" onclick="toggleTextSelectMode()">👆 Select Text</button>
+                <button class="action-btn" onclick="toggleGrid()">📐 Grid</button>
+            </div>
+
+            <!-- Third Row: Actions -->
             <div class="tool-row">
                 <button class="action-btn" onclick="showAIPanel()">✨ AI Design</button>
                 <button class="action-btn" onclick="saveDesign()">💾 Save</button>
@@ -35,6 +46,89 @@
                 <button class="action-btn" onclick="toggleSettings()">⚙️ Settings</button>
             </div>
         </div>
+
+        <!-- Colors Panel -->
+        <div id="colors-panel" class="colors-panel" style="display:none;">
+            <div class="color-picker-group">
+                <label for="custom-color">Custom Color:</label>
+                <input type="color" id="custom-color" value="#000000" onchange="handleColorInput(this.value)">
+            </div>
+            <div class="color-swatches">
+                <button class="swatch" style="background:black;" onclick="changeColor('black')"></button>
+                <button class="swatch" style="background:red;" onclick="changeColor('red')"></button>
+                <button class="swatch" style="background:blue;" onclick="changeColor('blue')"></button>
+                <button class="swatch" style="background:pink;" onclick="changeColor('pink')"></button>
+                <button class="swatch" style="background:green;" onclick="changeColor('green')"></button>
+                <button class="swatch" style="background:purple;" onclick="changeColor('purple')"></button>
+                <button class="swatch" style="background:orange;" onclick="changeColor('orange')"></button>
+                <button class="swatch" style="background:brown;" onclick="changeColor('brown')"></button>
+                <button class="swatch" style="background:white;" onclick="changeColor('white')"></button>
+                <button class="swatch" style="background:gray;" onclick="changeColor('gray')"></button>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="settings-panel" style="display:none;">
+            <div class="setting-group">
+                <label for="brushSize">Brush Size: <span id="brush-size-label">5</span></label>
+                <input type="range" id="brushSize" min="1" max="20" value="5" onchange="updateBrushSize(this.value)">
+            </div>
+            <div class="setting-group">
+                <label>Fabric:</label>
+                <div class="fabric-buttons">
+                    <button onclick="setFabric('none')">None</button>
+                    <button onclick="setFabric('dots')">Dots</button>
+                    <button onclick="setFabric('stripes')">Stripes</button>
+                    <button onclick="setFabric('grid')">Grid</button>
+                    <button onclick="setFabric('plaid')">Plaid</button>
+                    <button onclick="setFabric('chevron')">Chevron</button>
+                    <button onclick="setFabric('herringbone')">Herringbone</button>
+                    <button onclick="setFabric('lace')">Lace</button>
+                </div>
+            </div>
+            <div class="setting-group">
+                <label for="watermark-toggle">Watermark:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="watermark-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <input type="text" id="watermark-text" placeholder="Your brand name" value="Fashion Studio">
+            </div>
+        </div>
+
+        <!-- AI Panel -->
+        <div class="ai-panel" id="ai-panel">
+            <input type="text" id="prompt" placeholder="Describe your dream dress...">
+            <select id="style-select">
+                <option value="professional fashion design sketch, clean lines">Fashion Illustration</option>
+                <option value="watercolor fashion illustration, soft colors">Watercolor</option>
+                <option value="pencil sketch, black and white, technical drawing">Pencil Sketch</option>
+                <option value="realistic fabric rendering, high detail">Realistic</option>
+            </select>
+            <button onclick="createAIDesign()">Generate</button>
+            <button onclick="generateAgain()">🔄</button>
+            <button onclick="hideAIPanel()">✖️</button>
+        </div>
+
+        <!-- Canvas Area -->
+        <main class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </main>
+
+        <!-- Status Bar -->
+        <div class="status-pill">
+            <span class="dot" id="status-color-dot" style="background:black;"></span>
+            <span id="current-color-display">black</span>
+            <span class="separator">|</span>
+            <span id="current-mode-display">Pen</span>
+            <span class="separator">|</span>
+            <span>Size: <span id="status-brush-size">5</span></span>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>        </div>
 
         <!-- Colors Panel (toggleable) -->
         <div id="colors-panel" class="colors-panel" style="display:none;">
